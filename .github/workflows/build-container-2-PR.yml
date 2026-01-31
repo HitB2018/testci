@@ -1,0 +1,22 @@
+name: 'Build container (PR/2)'
+
+on:
+  merge_group:
+  push:
+    branches-ignore:
+      - main
+    #paths:
+    #  - .github/workflows/dbuild-container-2-PR.yml
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pr-merge_queue_only-2:
+    name: PR image (2)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - run: cat "$GITHUB_EVENT_PATH"
