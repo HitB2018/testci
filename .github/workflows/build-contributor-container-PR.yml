@@ -1,0 +1,70 @@
+name: 'Build Contributor container (PR)'
+# For speedup to do this in parallel: https://docs.docker.com/build/ci/github-actions/multi-platform/
+# Loosely based on: https://docs.docker.com/build/ci/github-actions/push-multi-registries/
+
+on:
+  merge_group:
+  # We can't limit the files as below as this is a required check so should run
+  # We exit early in case no relevant file changed
+  pull_request:
+    branches:
+      - main
+  push:
+    # We don't start the job if no relevant file changed
+    paths:
+      # This is an `either`, so any file listed here will trigger
+      - docker-contributor/**
+      - .github/workflows/build-contributor-container-PR.yml
+
+jobs:
+  pr-contributor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - run: exit 0
+
+      - name: Detect changed files and compute condition
+        id: filter
+        uses: ./.github/actions/helper-detect-changed-files
+        with:
+          trigger-files: "docker-contributor .github/workflows/build-contributor-container-PR"
+
+      - name: Mark as skipped
+        if: steps.filter.outputs.should_run == 'false'
+        run: echo "Skip job, no important files changed"
+
+      - name: Set up QEMU
+        if: steps.filter.outputs.should_run == 'true'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: steps.filter.outputs.should_run == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub container registry
+        if: steps.filter.outputs.should_run == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        if: steps.filter.outputs.should_run == 'true'
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ghcr.io/${{ github.repository }}
+
+      - name: Build and push
+        if: steps.filter.outputs.should_run == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: docker-contributor
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
