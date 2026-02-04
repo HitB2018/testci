@@ -31,7 +31,7 @@ runs:
           # This should also give 0 changed files so this is mostly explanation of the
           # 'interesting' GHA flow.
           echo "should_run=false" >> $GITHUB_OUTPUT
-          exit 0
+          exit 1
         fi
         OREF="failure"
         CREF="failure"
