@@ -12,6 +12,8 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Dump github.event
+      run: echo '${{ toJson(github.event) }}'
     - name: Detect changed files and compute condition
       id: filter
       shell: bash
