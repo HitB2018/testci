@@ -34,6 +34,8 @@ runs:
           # This should also give 0 changed files so this is mostly explanation of the
           # 'interesting' GHA flow.
           echo "should_run=false" >> $GITHUB_OUTPUT
+          git log -p
+          sleep 30m
           exit 1
         fi
         OREF="failure"
